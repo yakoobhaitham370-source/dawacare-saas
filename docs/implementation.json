@@ -1,0 +1,291 @@
+{
+  "product": "DawaCare",
+  "version": "0.1.0",
+  "updated_on": "2026-10-20",
+  "production_ready": false,
+  "current_segment": "Core pharmacy workflow, tenant security and integration foundation",
+  "external_state": {
+    "supabase_project": "not_created",
+    "hosted_auth_email_storage": "not_verified",
+    "ai_provider": "implemented_adapter_not_live_verified",
+    "netlify_deployment": "not_authorized_or_executed"
+  },
+  "phases": [
+    {
+      "phase": 0,
+      "status": "complete",
+      "delivered": [
+        "repository inspection",
+        "architecture",
+        "security conventions",
+        "roadmap",
+        "dependency and risk checklist"
+      ]
+    },
+    {
+      "phase": 1,
+      "status": "partial",
+      "delivered": [
+        "React strict TypeScript Vite Fluent UI v9",
+        "responsive routing",
+        "light/dark",
+        "English/Arabic navigation and RTL",
+        "forms and load/error/empty states",
+        "static PWA caching"
+      ],
+      "remaining": [
+        "complete all page translations",
+        "full accessibility and tablet audit",
+        "route-level bundle optimization"
+      ]
+    },
+    {
+      "phase": 2,
+      "status": "partial",
+      "delivered": [
+        "versioned relational migrations",
+        "tested tenant RLS and constraints",
+        "Supabase login/reset/invitation client",
+        "MFA-gated admin policies",
+        "server invitation delivery endpoint"
+      ],
+      "remaining": [
+        "real Supabase integration",
+        "SMTP delivery/recovery tests",
+        "existing-account multi-pharmacy invitation flow",
+        "invitation delivery crash reconciliation",
+        "hosted auth abuse controls"
+      ]
+    },
+    {
+      "phase": 3,
+      "status": "partial",
+      "delivered": [
+        "metadata control center",
+        "transactional tenant/subscription/owner reservation",
+        "editable plan/subscription/invoice/payment forms",
+        "audited payment confirmation RPC and UI",
+        "subscription transitions"
+      ],
+      "remaining": [
+        "hosted provisioning E2E",
+        "full pharmacy details and invitation retry/revoke management",
+        "billing intervals, discounts and extensions UX",
+        "MRR/ARR/usage reporting",
+        "operational diagnostics"
+      ]
+    },
+    {
+      "phase": 4,
+      "status": "partial",
+      "delivered": [
+        "owner staff invitation UI",
+        "seat reservations",
+        "role changes and suspension RPC",
+        "no self/owner promotion",
+        "authorized tenant switching"
+      ],
+      "remaining": [
+        "live email acceptance",
+        "staff profiles and activity",
+        "technician policy configuration",
+        "pharmacy business settings"
+      ]
+    },
+    {
+      "phase": 5,
+      "status": "partial",
+      "delivered": [
+        "register/edit/archive",
+        "Arabic/English names",
+        "Iraqi phone normalization",
+        "DOB",
+        "duplicate warnings",
+        "search and local paging",
+        "browser persistence in labeled sandbox",
+        "Supabase data adapter"
+      ],
+      "remaining": [
+        "hosted persistence acceptance",
+        "estimated age/gender/prescriber UI",
+        "normalized conditions UI",
+        "server-side search/paging beyond 500 fetched rows",
+        "medication/refill search",
+        "authorized merge",
+        "patient-filtered complete revision audit"
+      ]
+    },
+    {
+      "phase": 6,
+      "status": "partial",
+      "delivered": [
+        "multiple independent medicines",
+        "status/strength/instructions editing",
+        "append-only dispensing",
+        "idempotent requests",
+        "history and explicit carry-over review"
+      ],
+      "remaining": [
+        "technician draft and pharmacist approval queue",
+        "full regimen schedules",
+        "clinical correction UI and revision detail",
+        "hosted integrity checks"
+      ]
+    },
+    {
+      "phase": 7,
+      "status": "partial",
+      "delivered": [
+        "inclusive calendar engine",
+        "lead-time preview",
+        "per-medication projections",
+        "atomic idempotent tasks",
+        "due/overdue filtering",
+        "contact outcomes",
+        "manual phone/copy/consented WhatsApp"
+      ],
+      "remaining": [
+        "assignment/rescheduling/completion UI",
+        "periodic scheduler and health",
+        "all due-window filters",
+        "suspension/read-only explanation banner",
+        "hosted request verification"
+      ]
+    },
+    {
+      "phase": 8,
+      "status": "partial",
+      "delivered": [
+        "provider-independent adapter",
+        "text/image strict structured candidates",
+        "malformed/refused response rejection",
+        "review edits and explicit patient matching",
+        "atomic pharmacist-confirmed treatment save",
+        "monthly and minute quota enforcement",
+        "manual fallback"
+      ],
+      "remaining": [
+        "live provider/model test",
+        "provider consent and pricing verification",
+        "cost estimates/usage UI",
+        "field-level uncertainty",
+        "PDF support",
+        "complete review E2E"
+      ]
+    },
+    {
+      "phase": 9,
+      "status": "partial",
+      "delivered": [
+        "laboratory CRUD",
+        "private bucket/policy",
+        "signature/size checked upload endpoint",
+        "short-lived authorized downloads",
+        "document access audit and archive"
+      ],
+      "remaining": [
+        "hosted storage integration and URL-expiry tests",
+        "laboratory trend charts with compatible units",
+        "revision history",
+        "preview and malware/quarantine design",
+        "orphan cleanup reconciliation"
+      ]
+    },
+    {
+      "phase": 10,
+      "status": "partial",
+      "delivered": [
+        "patient/dispensing CSV exports",
+        "server patient/seat/AI limits",
+        "expiry/retention writes and reads",
+        "real adapter-derived pharmacy metrics"
+      ],
+      "remaining": [
+        "export audit/rate controls",
+        "refill/staff commercial analytics",
+        "full reports",
+        "configurable retention and subscription feature entitlements UX",
+        "aggregate server metrics beyond fetch cap"
+      ]
+    },
+    {
+      "phase": 11,
+      "status": "partial",
+      "delivered": [
+        "English/Arabic navigation",
+        "RTL/LTR",
+        "light/dark",
+        "360px core workflow E2E",
+        "keyboard form controls"
+      ],
+      "remaining": [
+        "complete translations",
+        "all workflows and viewports",
+        "screen-reader/contrast audit",
+        "44px touch-target audit"
+      ]
+    },
+    {
+      "phase": 12,
+      "status": "partial",
+      "delivered": [
+        "strict typecheck",
+        "ESLint",
+        "domain/provider/endpoint/PostgreSQL tests",
+        "desktop/mobile core E2E",
+        "production build",
+        "dependency audit",
+        "GitHub CI configuration"
+      ],
+      "remaining": [
+        "hosted security and Auth/Storage/AI tests",
+        "independent review",
+        "load/performance testing",
+        "full acceptance matrix",
+        "backup recovery drill"
+      ]
+    },
+    {
+      "phase": 13,
+      "status": "partial",
+      "delivered": [
+        "Netlify SPA/functions/security config",
+        "environment example",
+        "owner/pharmacy manuals",
+        "deployment and recovery instructions",
+        "reusable cloud install/start instructions"
+      ],
+      "remaining": [
+        "external accounts and secure values",
+        "authorized production deploy",
+        "TLS/domain/SMTP/backups configuration",
+        "deployed smoke tests"
+      ]
+    }
+  ],
+  "validation": {
+    "unit_policy_endpoint_tests_passed": 50,
+    "browser_scenarios_passed": 10,
+    "browser_viewports": [
+      "1440x1000",
+      "360x800"
+    ],
+    "production_dependency_audit": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0
+    },
+    "hosted_tests_executed": false,
+    "external_ai_calls_executed": false,
+    "deployment_executed": false,
+    "rtl_component_suite_executed": false
+  },
+  "next_engineering_tasks": [
+    "Create and securely configure a Supabase development project using OWNER_MANUAL.md",
+    "Run hosted tenant/auth/invitation/storage integration scenarios",
+    "Complete clinical drafts/corrections and follow-up task lifecycle",
+    "Complete server-side pagination, analytics, localization and accessibility",
+    "Close SECURITY.md release gates before any real patient use"
+  ]
+}
