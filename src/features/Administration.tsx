@@ -13,28 +13,14 @@ import {
 } from "../components/common";
 import { adminCollections } from "./Other";
 import { Collection } from "./Collection";
+import { InvitationManagement } from "./Invitations";
+import { deliverInvitation as deliver } from "../services/invitations";
 import { today, shiftDate } from "../lib/domain";
 async function rpc(name: string, args: Record<string, unknown>) {
   if (!supabase) throw new Error("Supabase is not configured.");
   const { data, error } = await supabase.rpc(name, args);
   if (error) throw new Error(error.message);
   return data;
-}
-async function deliver(id: string) {
-  if (!supabase) throw new Error("Supabase is not configured.");
-  const { data } = await supabase.auth.getSession();
-  const response = await fetch("/api/invite", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${data.session?.access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ invitation_id: id }),
-  });
-  if (!response.ok)
-    throw new Error(
-      "Invitation delivery failed. The reserved invitation can be retried after the service is configured.",
-    );
 }
 export function Pharmacies() {
   const { scope } = useAuth();
@@ -144,13 +130,13 @@ export function Pharmacies() {
         {message && <Notice>{message}</Notice>}
         {error && <Notice error>{error}</Notice>}
       </section>
+      <InvitationManagement />
     </>
   );
 }
 export function StaffManagement() {
   const { scope } = useAuth();
-  const q = useRows("pharmacy_memberships"),
-    invites = useRows("pharmacy_invitations");
+  const q = useRows("pharmacy_memberships");
   const cache = useQueryClient();
   const [email, setEmail] = useState(""),
     [role, setRole] = useState("pharmacist"),
@@ -167,6 +153,7 @@ export function StaffManagement() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Operation failed");
     } finally {
+      await cache.invalidateQueries({ queryKey: ["records"] });
       setBusy(false);
     }
   }
@@ -281,34 +268,9 @@ export function StaffManagement() {
               Reserve seat & send invitation
             </Button>
           </form>
-          <h2 className="spaced">Invitation delivery</h2>
-          <DataTable
-            rows={invites.data ?? []}
-            columns={[
-              { key: "email", label: "Email" },
-              { key: "role", label: "Role" },
-              {
-                key: "status",
-                label: "Status",
-                render: (r) => <Status value={r.status} />,
-              },
-              { key: "expires_at", label: "Expires" },
-            ]}
-            actions={(r) =>
-              ["pending", "failed"].includes(String(r.status)) ? (
-                <Button
-                  disabled={scope.sandbox || busy}
-                  onClick={() =>
-                    void perform(() => deliver(r.id), "Invitation delivered.")
-                  }
-                >
-                  Retry delivery
-                </Button>
-              ) : null
-            }
-          />
         </section>
       )}
+      {scope.role === "owner" && <InvitationManagement />}
     </>
   );
 }

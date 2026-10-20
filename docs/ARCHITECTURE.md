@@ -10,7 +10,7 @@ Netlify Functions verify JWTs via Supabase, then delegate privileged operations 
 
 ## Development sandbox
 
-The explicit /sandbox entry opens an isolated synthetic-data adapter using browser storage under a dedicated versioned key. It is a workflow test aid, not authentication, production persistence, or a secure medical record system. The real application uses /login and never falls back to sandbox on connection failure. Real patient data must never be entered in sandbox. Seed dates use the current Baghdad calendar so queues remain useful. Sandbox role switching is a labeled testing tool only.
+The explicit home-page sandbox action opens an isolated synthetic-data adapter using browser storage under a dedicated versioned key. It is a workflow test aid, not authentication, production persistence, or a secure medical record system. The real application uses /login and never falls back to sandbox on connection failure. Real patient data must never be entered in sandbox. Seed dates use the current Baghdad calendar so queues remain useful. Sandbox role switching is a labeled testing tool only.
 
 ## Clinical model
 
@@ -27,3 +27,11 @@ Migrations are version-controlled; the browser contains no administrative key. P
 3. Date-only arithmetic and explicit pharmacist review take priority over inferred precision.
 4. Initial payments are manually recorded and separately confirmed; payment method never implies verification.
 5. Commercial super-admin privileges do not bypass clinical RLS.
+
+## Development integration hardening
+
+Migrations 7–9 preserve the first six migrations and normalize table/function grants under Supabase default privileges, lease invitation deliveries, support verified existing accounts, recover stale sends, scope private document metadata registration to the server, and validate all persisted dispensing fields on idempotent replay. Invitation acceptance is explicit for one pharmacy and rechecks membership/subscription/seat authorization.
+
+Connected auth responses are versioned so an old membership lookup cannot overwrite a newer user. User changes clear cached query records; session expiry clears MFA and tenant access. An active synthetic workspace makes no Supabase auth/membership calls. Entering login, invitation, recovery or MFA from a stored sandbox clears its mode flag. No synthetic record is copied into connected mode.
+
+Browser build configuration rejects private keys. Connected deploy previews require a matching explicit development project reference. Backend development guards reject the existing production origin and require the development reference for remote Supabase. `GET /api/health` requires a verified admin JWT with MFA and reports signup/bucket/migration statuses without revealing values. See SUPABASE_DEVELOPMENT_SETUP.md for the exact secure settings.

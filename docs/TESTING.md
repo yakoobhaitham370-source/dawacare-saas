@@ -23,3 +23,11 @@ Provider tests simulate responses and prove schema rejection/failure behavior. E
 Browser tests exercise patient registration and browser persistence, medicine entry, dispensing/history, refill/contact workflows, technician/admin navigation restrictions, Arabic RTL switching, dark mode, AI disabled state and public route guards. Tests run at desktop and 360px; complete Arabic content, tablet/accessibility and hosted administrator workflows remain unverified.
 
 See `implementation.json` for the final run counts and remaining acceptance gates. Do not replace hosted testing with a successful build or synthetic local persistence. React Testing Library is installed for future targeted component tests; no separate RTL component suite is claimed in this segment.
+
+## Supabase integration branch
+
+`npm test` additionally exercises Supabase-style default privileges, invitation concurrency/expiry/recovery/explicit multi-tenant acceptance, service-only document registration, private frontend-key rejection, development target guards, stale auth result isolation, session expiry, sandbox isolation, and the bootstrap password screen. Provider email sends in unit tests are explicitly mocked.
+
+`npm run test:integration` is an opt-in **real-service** suite. It fails with `BLOCKED` before test collection unless a synthetic development target and required secure settings are supplied. Remote runs require matching development project markers and verified database TLS. It creates and cleans only UUID-scoped test fixtures. Without a Netlify development URL it invokes Node function handlers against real Supabase; with that URL it tests deployed HTTP functions. Neither path targets the existing production website.
+
+See INTEGRATION_REVIEW.md for the actual pass/blocked outcomes from this segment. Hosted tests are not silently skipped or relabeled as unit passes. The local Docker startup attempts failed during PostgreSQL image extraction under the 32 GB filesystem; no Supabase service integration pass is inferred from those attempts.

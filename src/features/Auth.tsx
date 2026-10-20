@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Button, Field, Input } from "@fluentui/react-components";
 import { useAuth } from "../app/context";
-import { supabase } from "../lib/data";
+import { supabase, clientConfigurationError } from "../lib/data";
 import { Heading, Notice } from "../components/common";
 export function Landing({ section = "home" }: { section?: string }) {
   const { enterSandbox } = useAuth();
@@ -121,8 +121,8 @@ export function Login({ reset = false }: { reset?: boolean }) {
         />
         {!supabase && (
           <Notice>
-            Live sign-in needs Supabase configuration. The synthetic sandbox is
-            available for development.
+            {clientConfigurationError ||
+              "Live sign-in needs Supabase configuration. The synthetic sandbox is available for development."}
           </Notice>
         )}
         <form
@@ -134,7 +134,7 @@ export function Login({ reset = false }: { reset?: boolean }) {
             try {
               const result = reset
                 ? await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${location.origin}/accept-invitation`,
+                    redirectTo: `${location.origin}/reset-password`,
                   })
                 : await supabase.auth.signInWithPassword({ email, password });
               if (result.error) throw result.error;
@@ -199,57 +199,4 @@ export function Login({ reset = false }: { reset?: boolean }) {
     </main>
   );
 }
-export function AcceptInvitation() {
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  return (
-    <main className="auth-page">
-      <div className="auth-card">
-        <Heading
-          title="Secure your account"
-          subtitle="Open the invitation or password recovery link sent to your email."
-        />
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!supabase) return;
-            const { data } = await supabase.auth.getSession();
-            if (!data.session) {
-              setMessage("A valid invitation or recovery session is required.");
-              return;
-            }
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) {
-              setMessage("Unable to set password. Request a new invitation.");
-              return;
-            }
-            const accepted = await supabase.rpc("accept_pending_invitation");
-            if (accepted.error) {
-              setMessage(
-                "Password updated, but membership activation failed. Contact the pharmacy owner.",
-              );
-              return;
-            }
-            location.assign("/app/dashboard");
-          }}
-        >
-          <Field label="New password (at least 12 characters)" required>
-            <Input
-              type="password"
-              minLength={12}
-              required
-              value={password}
-              onChange={(_, d) => setPassword(d.value)}
-              autoComplete="new-password"
-            />
-          </Field>
-          <Button appearance="primary" type="submit" disabled={!supabase}>
-            Set password
-          </Button>
-        </form>
-        {message && <Notice>{message}</Notice>}
-        <Link to="/login">Go to sign in</Link>
-      </div>
-    </main>
-  );
-}
+export { InvitationAcceptance as AcceptInvitation } from "./InvitationAcceptance";

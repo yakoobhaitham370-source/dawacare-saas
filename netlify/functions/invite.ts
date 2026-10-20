@@ -1,89 +1,115 @@
 import { createClient } from "@supabase/supabase-js";
+import { serverConfiguration } from "../lib/config";
 import { z } from "zod";
 const input = z.object({ invitation_id: z.string().uuid() });
 export default async (req: Request) => {
-  const response = (status: number, body: unknown) =>
+  const reply = (status: number, body: unknown) =>
     Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
-  if (req.method !== "POST")
-    return response(405, { error: "Method not allowed" });
-  const origin = process.env.SITE_URL;
-  if (!origin || req.headers.get("origin") !== new URL(origin).origin)
-    return response(403, { error: "Forbidden" });
-  const url = process.env.SUPABASE_URL,
-    key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key)
-    return response(503, { error: "Invitation service is not configured" });
-  const token = req.headers.get("authorization")?.replace(/^Bearer /i, "");
-  if (!token) return response(401, { error: "Authentication required" });
+  if (req.method !== "POST") return reply(405, { error: "Method not allowed" });
+  let site: URL;
+  try {
+    site = new URL(process.env.SITE_URL ?? "");
+  } catch {
+    return reply(503, { error: "Invitation service is not configured" });
+  }
+  if (req.headers.get("origin") !== site.origin)
+    return reply(403, { error: "Forbidden" });
+  let config: ReturnType<typeof serverConfiguration>;
+  try {
+    config = serverConfiguration();
+  } catch {
+    return reply(503, {
+      error: "Invitation service is not configured for this development target",
+    });
+  }
+  if (req.headers.get("origin") !== config.origin)
+    return reply(403, { error: "Forbidden" });
+  const { url, key } = config;
+  const token = req.headers
+    .get("authorization")
+    ?.match(/^Bearer\s+(\S+)$/i)?.[1];
+  if (!token) return reply(401, { error: "Authentication required" });
   const server = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: auth, error: authError } = await server.auth.getUser(token);
-  if (authError || !auth.user)
-    return response(401, { error: "Authentication required" });
-  if (Number(req.headers.get("content-length") ?? 0) > 4096)
-    return response(413, { error: "Request too large" });
-  let parsed;
-  try {
-    const raw = await req.text();
-    if (raw.length > 4096) return response(413, { error: "Request too large" });
-    parsed = input.parse(JSON.parse(raw));
-  } catch {
-    return response(400, { error: "Invalid request" });
-  }
-  const { data: invite, error } = await server
-    .from("pharmacy_invitations")
-    .select("*")
-    .eq("id", parsed.invitation_id)
-    .single();
-  // Only the verified initiating user may deliver this outbox record. Permission was checked by the transaction that created it.
-  if (
-    error ||
-    !invite ||
-    invite.invited_by !== auth.user.id ||
-    !["pending", "failed"].includes(invite.status) ||
-    new Date(invite.expires_at) < new Date()
-  )
-    return response(403, { error: "Invitation unavailable" });
-  // Revalidate privileges at delivery time; revocation must take effect immediately.
   const scoped = createClient(url, key, {
     global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false },
+    auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: admin } = await scoped.rpc("is_platform_admin");
-  const { data: role } = await scoped.rpc("member_role", {
-    p_id: invite.pharmacy_id,
-  });
-  if (!admin && (role !== "owner" || invite.role === "owner"))
-    return response(403, { error: "Forbidden" });
-  // Atomic status claim prevents concurrent delivery. On failure preserve the tenant and retryable invitation.
-  const { data: claimed } = await server
-    .from("pharmacy_invitations")
-    .update({ status: "sent" })
-    .eq("id", invite.id)
-    .in("status", ["pending", "failed"])
-    .select("id");
-  if (!claimed?.length)
-    return response(409, { error: "Invitation already being delivered" });
-  const sent = await server.auth.admin.inviteUserByEmail(invite.email, {
-    redirectTo: `${new URL(origin).origin}/accept-invitation`,
-  });
-  if (sent.error || !sent.data.user) {
-    await server
-      .from("pharmacy_invitations")
-      .update({ status: "failed" })
-      .eq("id", invite.id);
-    return response(502, {
-      error: "Delivery failed. The invitation remains reserved for retry.",
+  let claim: { id: string; lease: string; email: string } | undefined;
+  try {
+    const auth = await server.auth.getUser(token);
+    if (auth.error || !auth.data.user)
+      return reply(401, { error: "Authentication required" });
+    if (Number(req.headers.get("content-length") ?? 0) > 4096)
+      return reply(413, { error: "Request too large" });
+    const raw = await req.text();
+    if (raw.length > 4096) return reply(413, { error: "Request too large" });
+    let parsed;
+    try {
+      parsed = input.parse(JSON.parse(raw));
+    } catch {
+      return reply(400, { error: "Invalid request" });
+    }
+    const reservation = await scoped.rpc("claim_invitation_delivery", {
+      p_id: parsed.invitation_id,
+    });
+    if (reservation.error)
+      return reply(409, {
+        error:
+          "Invitation unavailable. Check permission, expiry and the retry cooldown.",
+      });
+    claim = reservation.data as typeof claim;
+    if (!claim) throw new Error("Missing delivery lease");
+    const recipient = await server.rpc("invitation_recipient", {
+      p_id: claim.id,
+      p_lease: claim.lease,
+    });
+    if (recipient.error) throw new Error("Recipient lookup failed");
+    let user: string;
+    if (recipient.data) {
+      // Existing accounts use a one-time login link, not another signup/invite.
+      const result = await server.auth.signInWithOtp({
+        email: claim.email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${config.origin}/accept-invitation`,
+        },
+      });
+      if (result.error) throw new Error("Delivery failed");
+      user = recipient.data as string;
+    } else {
+      const result = await server.auth.admin.inviteUserByEmail(claim.email, {
+        redirectTo: `${config.origin}/accept-invitation`,
+      });
+      if (result.error || !result.data.user) throw new Error("Delivery failed");
+      user = result.data.user.id;
+    }
+    const finish = await server.rpc("finish_invitation_delivery", {
+      p_id: claim.id,
+      p_lease: claim.lease,
+      p_user: user,
+      p_success: true,
+    });
+    if (finish.error) throw new Error("Delivery reconciliation required");
+    // A verified recipient may have accepted while the provider response was in flight.
+    return reply(200, { status: "sent" });
+  } catch {
+    if (claim) {
+      try {
+        await server.rpc("finish_invitation_delivery", {
+          p_id: claim.id,
+          p_lease: claim.lease,
+          p_user: null,
+          p_success: false,
+        });
+      } catch {
+        /* An expired lease can be recovered by the next authorized retry. */
+      }
+    }
+    return reply(502, {
+      error:
+        "Delivery could not be confirmed. The invitation is recoverable; retry after the cooldown instead of creating another pharmacy.",
     });
   }
-  const saved = await server
-    .from("pharmacy_invitations")
-    .update({ provider_user_id: sent.data.user.id })
-    .eq("id", invite.id);
-  if (saved.error)
-    return response(502, {
-      error: "Invitation delivery requires administrator reconciliation.",
-    });
-  return response(200, { status: "sent" });
 };

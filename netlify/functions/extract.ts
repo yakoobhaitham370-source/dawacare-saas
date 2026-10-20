@@ -1,3 +1,4 @@
+import { serverConfiguration } from "../lib/config";
 import { createClient } from "@supabase/supabase-js";
 import {
   createProvider,
@@ -7,8 +8,13 @@ export default async (req: Request) => {
   const reply = (status: number, body: unknown) =>
     Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
   if (req.method !== "POST") return reply(405, { error: "Method not allowed" });
-  const site = process.env.SITE_URL;
-  if (!site || req.headers.get("origin") !== new URL(site).origin)
+  let site: URL;
+  try {
+    site = new URL(process.env.SITE_URL ?? "");
+  } catch {
+    return reply(503, { error: "Service configuration is incomplete" });
+  }
+  if (req.headers.get("origin") !== site.origin)
     return reply(403, { error: "Forbidden" });
   const url = process.env.SUPABASE_URL,
     key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,6 +32,13 @@ export default async (req: Request) => {
   } catch {
     return reply(503, {
       error: "AI provider is not configured. Use manual entry.",
+    });
+  }
+  try {
+    serverConfiguration();
+  } catch {
+    return reply(503, {
+      error: "Service is not configured for this development target",
     });
   }
   const token = req.headers.get("authorization")?.replace(/^Bearer /i, "");

@@ -65,3 +65,19 @@ describe("server endpoint guards without service credentials", () => {
     );
   });
 });
+
+describe("malformed server configuration", () => {
+  it.each([invite, extract, documents])(
+    "fails safely for an invalid SITE_URL",
+    async (handler) => {
+      vi.stubEnv("SITE_URL", "invalid-url");
+      const response = await handler(
+        new Request("https://example.test/api", {
+          method: "POST",
+          headers: { Origin: "https://example.test" },
+        }),
+      );
+      expect(response.status).toBe(503);
+    },
+  );
+});

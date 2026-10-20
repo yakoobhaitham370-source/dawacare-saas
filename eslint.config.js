@@ -5,6 +5,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist/**",
+      ".netlify/**",
       "node_modules/**",
       "playwright-report/**",
       "test-results/**",

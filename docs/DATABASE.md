@@ -17,4 +17,14 @@ Patients have tenant-scoped display numbers assigned while locking the pharmacy 
 
 `npm run test:db` uses PGlite's actual PostgreSQL engine with non-owner `authenticated` sessions. The tests emulate Supabase auth functions and storage tables. They exercise RLS, constraints and privileged SQL functions; they do not exercise the real Supabase Auth, PostgREST, email or Storage services.
 
+Migrations added by the integration branch (the original six are unchanged):
+
+- `0007_integration_hardening`: explicit table/function ACLs compatible with Supabase default grants; immutable patient numbers; self-scoped notification preferences; AI job/usage tenant FK; payment currency check; server-only document registration.
+- `0008_invitation_lifecycle`: delivery lease/cooldown/cap, authorized retry/revoke/renew, existing-user lookup limited to service-role execution, explicit verified invitation acceptance, current inviter and seat revalidation. Acceptance and preparation lock the pharmacy first to serialize reservations/activation.
+- `0009_dispensing_replay_integrity`: compare every persisted clinical/reminder/correction field for an existing request ID. A changed carry-over decision is not a replay.
+
+The new PGlite fixture deliberately grants broad Supabase-style default privileges before migration to test that the hardening revokes them. Original migration tests continue, and additional cases cover leases, multi-membership acceptance, expiration, revocation, seat reductions, stale delivery completion and API grant boundaries.
+
+The local CLI configuration disables signup, enables TOTP and disables seed execution. It does not configure a hosted project. The optional real-service suite uses Auth/PostgREST/Storage plus a private development database connection and rejects unconfirmed remote test targets. It is separate from `npm test`.
+
 No production patient seeds are supplied or run. The browser-only synthetic seed is wholly separate from Supabase.
