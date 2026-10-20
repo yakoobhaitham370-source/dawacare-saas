@@ -22,11 +22,15 @@ npm run lint
 npm test
 npm run build
 npm run test:e2e
+# Requires explicitly configured, isolated development services:
+npm run test:integration
 ```
 
 Cloud browser tests use the installed `/usr/bin/chromium`. On another machine set `PLAYWRIGHT_CHROMIUM_PATH` to a Chromium executable, or install Playwright Chromium and adapt the configuration. See [testing evidence](docs/TESTING.md).
 
 ## Connect and deploy
+
+For the current development integration, start with the exact [Supabase development setup](docs/SUPABASE_DEVELOPMENT_SETUP.md) and [integration review report](docs/INTEGRATION_REVIEW.md). Use a separate development project/site; leave the existing production origin unchanged.
 
 Follow the numbered [owner manual](docs/OWNER_MANUAL.md), then [deployment guide](docs/DEPLOYMENT.md). Do not paste service keys into chat or commit `.env` files. `.env.example` contains names only.
 

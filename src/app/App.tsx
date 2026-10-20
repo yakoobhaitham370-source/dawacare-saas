@@ -63,6 +63,7 @@ import {
 } from "../features/Administration";
 import { PrivateDocuments } from "../features/Documents";
 import { AIReview } from "../features/AIReview";
+import { ResetPassword } from "../features/InvitationAcceptance";
 import { MFA } from "../features/MFA";
 import type { Role } from "../lib/domain";
 const queryClient = new QueryClient({
@@ -332,6 +333,7 @@ function Routed({
       ))}
       <Route path="/mfa" element={<MFA />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/forgot-password" element={<Login reset />} />
       <Route path="/accept-invitation" element={<AcceptInvitation />} />
       <Route element={<Guard />}>

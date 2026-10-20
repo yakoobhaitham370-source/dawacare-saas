@@ -22,7 +22,7 @@ The release is a development build. Do not use it for real patient care yet.
 4. Complete technician draft/approval queues and configurable fixed policy sets, clinical correction/revision UI, normalized condition UI, search pagination beyond 500 fetched rows and medicine search.
 5. Full Arabic translation, keyboard/screen-reader/contrast audit, tablet/360px workflow coverage for every privileged workflow, production performance budget.
 6. Verified live AI provider/model, patient consent, provider DPA, pricing estimates, external spending limits and operational dashboards.
-7. Full billing lifecycle UI, invitation retry/revoke reconciliation, read-only expiration banner, configurable retention, support access and operational job health.
+7. Full billing lifecycle UI, hosted verification of invitation retry/revoke/recovery, read-only expiration banner, configurable retention, support access and operational job health.
 8. Data export audit/rate controls, backup/restore drill, retention/deletion procedures, incident response and independent dependency/security review.
 9. Production deployment, TLS, domain and service configuration, monitoring and acceptance tests with synthetic data.
 
@@ -33,3 +33,11 @@ The document file-signature check is not malware scanning. Consider an appropria
 Obtain qualified advice on Iraqi healthcare confidentiality, patient consent, data-controller/processor duties, cross-border transfers, hosting location, breach response, access/correction requests and retention. A cloud subscription is not compliance evidence. No HIPAA, GDPR or Iraqi regulatory compliance certification is claimed.
 
 Do not destructively reset production or disable RLS/TLS/checksum verification to work around failures. Keep secrets in provider settings. If exposed, rotate the key and assess affected access rather than merely deleting the visible copy.
+
+## Integration branch security fixes
+
+Explicit ACLs remove reliance on empty-schema default privileges. Browser calls cannot write memberships/invitations/events/audits, confirm payments, or register document metadata directly. Metadata registration is a service-only function that revalidates the verified user's tenant access. Delivery finish/recipient lookup RPCs are service-only; the caller JWT must first claim a lease with current role/MFA checks. Verified recipients explicitly accept only one pharmacy; expiry, revocation, inviter loss, subscription restrictions and seat reductions are rechecked.
+
+Stale auth responses cannot restore another user's role/tenant; record caches are cleared on user changes. Recovery is separated from invitations. A verified bootstrap account can set a password without pharmacy membership; its admin privileges still require TOTP. No public privilege-escalation endpoint or MFA recovery bypass was added.
+
+Frontend private-key rejection and development identity checks reduce accidental production connections in previews. These checks do not replace secure provider settings or independent review. Provider calls and full-stack integration remain unverified where credentials/access/resources are unavailable.

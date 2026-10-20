@@ -1,4 +1,6 @@
-# Deployment checklist (not yet executed)
+> Existing production origin: https://stunning-crumble-7aa0db.netlify.app. This integration work does not modify its configuration or publish to it. Use the separate-site instructions in [SUPABASE_DEVELOPMENT_SETUP.md](SUPABASE_DEVELOPMENT_SETUP.md).
+
+# Deployment checklist
 
 1. Complete OWNER_MANUAL.md against a separate Supabase development project. Keep public signup disabled; verify email, password recovery, invitation expiration, admin MFA and redirects.
 2. Apply the inspected migration sequence and run hosted tenant-isolation, role, subscription, payment and private-document tests. Local PGlite tests are not a hosted deployment test.
@@ -13,3 +15,9 @@
 11. Never point automated tests at production data. Restore a backup into a separate project and complete a documented recovery drill before accepting patient records.
 
 A domain, connected Netlify site, hosting configuration, Supabase project and any AI budget remain external prerequisites. Saving cloud environment instructions does not deploy this application or publish the cloud snapshot.
+
+## Development function verification
+
+Configure public build variables and private Functions variables separately, including the explicit development reference pairs in `.env.example`. Do not inherit production keys into a deploy preview. Missing/mismatched development identity aborts a connected preview build; the development backend refuses the existing production origin. `GET /api/health` requires a real admin JWT with MFA and checks actual Auth signup settings, private bucket metadata and the invitation migration.
+
+`npm run dev:full` pins Netlify CLI and runs offline to avoid fetching a linked site's production settings. Local CLI function loading alone does not verify deployed Netlify behavior. A deployed acceptance run must set the separate `DAWACARE_TEST_NETLIFY_URL` and execute `npm run test:integration` with the new development Supabase credentials. The existing production hostname is rejected by the test harness.

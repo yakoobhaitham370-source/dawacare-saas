@@ -1,9 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 import { clinical, projection, shiftDate, today } from "./domain";
 import type { Role, Row } from "./domain";
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const supabase = url && key ? createClient(url, key) : null;
+import { publicSupabaseConfig } from "./supabase-config";
+let configuration: ReturnType<typeof publicSupabaseConfig> = null;
+export let clientConfigurationError = "";
+try {
+  configuration = publicSupabaseConfig({
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    publishableKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  });
+} catch {
+  clientConfigurationError =
+    "Invalid Supabase public configuration. Check the URL and public key; never use server secrets in VITE_ variables.";
+}
+export const supabase = configuration
+  ? createClient(configuration.url, configuration.key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: "dawacare.connected.auth",
+      },
+    })
+  : null;
 export const SANDBOX_TENANT = "10000000-0000-4000-8000-000000000001";
 const STORAGE = "dawacare.synthetic.v1";
 type Store = Record<string, Row[]>;
@@ -135,6 +155,7 @@ const adminTables = [
   "subscription_payments",
   "administrative_audit_logs",
   "platform_settings",
+  "pharmacy_invitations",
 ];
 function assertScope(table: string, scope: Scope, write: boolean) {
   if (scope.role === "super_admin" && !adminTables.includes(table))
@@ -166,7 +187,15 @@ export async function list(table: string, scope: Scope): Promise<Row[]> {
   }
   if (!supabase) throw new Error("Configure Supabase to connect.");
   let query = supabase.from(table).select("*").limit(500);
-  if (!adminTables.includes(table))
+  if (
+    scope.role !== "super_admin" &&
+    ![
+      "pharmacies",
+      "subscription_plans",
+      "platform_settings",
+      "administrative_audit_logs",
+    ].includes(table)
+  )
     query = query.eq("pharmacy_id", scope.tenant);
   const { data, error } = await query;
   if (error) throw new Error(error.message);

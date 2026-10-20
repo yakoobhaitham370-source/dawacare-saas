@@ -1,6 +1,6 @@
 import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, afterAll, describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 const db = new PGlite();
 const a = "10000000-0000-4000-8000-000000000001",
   b = "10000000-0000-4000-8000-000000000002";
@@ -21,16 +21,11 @@ async function root(sql: string) {
   return db.exec(sql);
 }
 beforeAll(async () => {
-  await db.exec(`create role authenticated;create role anon;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;grant usage on schema auth to authenticated;grant execute on all functions in schema auth to authenticated;
+  await db.exec(`create role authenticated;create role anon;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;grant usage on schema auth to authenticated;grant execute on all functions in schema auth to authenticated;
  create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid primary key,name text,bucket_id text);alter table storage.objects enable row level security;grant usage on schema storage to authenticated;grant select on storage.objects to authenticated;`);
-  for (const file of [
-    "202610200001_core.sql",
-    "202610200002_invitations_and_safety.sql",
-    "202610200003_storage.sql",
-    "202610200004_ai.sql",
-    "202610200005_staff.sql",
-    "202610200006_documents.sql",
-  ])
+  for (const file of readdirSync("supabase/migrations")
+    .filter((f) => f.endsWith(".sql"))
+    .sort())
     await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
   await db.exec(
     `insert into auth.users values('${owner}','owner@example.invalid',now()),('${tech}','tech@example.invalid',now()),('${admin}','admin@example.invalid',now());insert into public.platform_admins values('${admin}',now());insert into public.pharmacies(id,name,city) values('${a}','Pharmacy A','Mosul'),('${b}','Pharmacy B','Mosul');insert into public.subscription_plans(id,name,price,staff_limit,patient_limit,ai_limit) values('50000000-0000-4000-8000-000000000001','Trial',0,3,10,0);insert into public.subscriptions(pharmacy_id,plan_id,status,starts_on,ends_on,staff_limit,patient_limit) select id,'50000000-0000-4000-8000-000000000001','trial',current_date-1,current_date+30,3,10 from public.pharmacies;insert into public.pharmacy_memberships(pharmacy_id,user_id,role) values('${a}','${owner}','owner'),('${a}','${tech}','technician');select set_config('request.jwt.claim.sub','${owner}',false);insert into public.patients(id,pharmacy_id,full_name,phone) values('${pa}','${a}','Patient A','+9647701234567'),('${pb}','${b}','Patient B','+9647501234567');insert into public.patient_medications(id,pharmacy_id,patient_id,medicine_name,strength,form,route,instructions,status) values('${ma}','${a}','${pa}','Metformin','500 mg','Tablet','Oral','As prescribed','active'),('${mb}','${b}','${pb}','Amlodipine','5 mg','Tablet','Oral','As prescribed','active');`,
@@ -344,6 +339,7 @@ describe("actual PostgreSQL RLS and integrity (PGlite, not hosted Supabase)", ()
   });
   it("validates tenant document paths and private object reads", async () => {
     await login(owner);
+    await root("");
     await expect(
       db.query("select register_document($1,$2,$3,$4,$5,$6)", [
         a,

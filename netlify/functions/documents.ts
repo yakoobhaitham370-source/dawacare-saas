@@ -1,3 +1,4 @@
+import { serverConfiguration } from "../lib/config";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 export function validSignature(bytes: Uint8Array, mime: string) {
@@ -13,13 +14,25 @@ export default async (req: Request) => {
   const reply = (status: number, body: unknown) =>
     Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
   if (req.method !== "POST") return reply(405, { error: "Method not allowed" });
-  const site = process.env.SITE_URL;
-  if (!site || req.headers.get("origin") !== new URL(site).origin)
+  let site: URL;
+  try {
+    site = new URL(process.env.SITE_URL ?? "");
+  } catch {
+    return reply(503, { error: "Service configuration is incomplete" });
+  }
+  if (req.headers.get("origin") !== site.origin)
     return reply(403, { error: "Forbidden" });
   const url = process.env.SUPABASE_URL,
     key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key)
     return reply(503, { error: "Private document service is not configured" });
+  try {
+    serverConfiguration();
+  } catch {
+    return reply(503, {
+      error: "Service is not configured for this development target",
+    });
+  }
   const token = req.headers.get("authorization")?.replace(/^Bearer /i, "");
   if (!token) return reply(401, { error: "Authentication required" });
   const server = createClient(url, key, { auth: { persistSession: false } });
@@ -82,7 +95,8 @@ export default async (req: Request) => {
       .from("patient-documents")
       .upload(path, bytes, { contentType: file.type, upsert: false });
     if (uploaded.error) return reply(502, { error: "Private upload failed" });
-    const registered = await scoped.rpc("register_document", {
+    const registered = await server.rpc("register_uploaded_document", {
+      p_actor: data.user.id,
       p_pharmacy: pharmacy,
       p_patient: patient,
       p_path: path,

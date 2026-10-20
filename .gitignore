@@ -3,6 +3,7 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.integration.example
 playwright-report/
 test-results/
 coverage/

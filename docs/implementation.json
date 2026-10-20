@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "updated_on": "2026-10-20",
   "production_ready": false,
-  "current_segment": "Core pharmacy workflow, tenant security and integration foundation",
+  "current_segment": "Supabase development integration hardening and gated real-service test preparation",
   "external_state": {
     "supabase_project": "not_created",
-    "hosted_auth_email_storage": "not_verified",
+    "hosted_auth_email_storage": "blocked_no_development_project_or_credentials",
     "ai_provider": "implemented_adapter_not_live_verified",
-    "netlify_deployment": "not_authorized_or_executed"
+    "netlify_deployment": "existing_site_supplied_by_user_not_modified",
+    "supabase_development_project": "not_created_confirmed_by_founder",
+    "netlify_production_site": "https://stunning-crumble-7aa0db.netlify.app",
+    "development_site": "not_created",
+    "github_pr_api": "blocked_by_egress_policy",
+    "github_git_transport": "initial_read_ok_final_push_blocked_upstream_503"
   },
   "phases": [
     {
@@ -47,14 +52,18 @@
         "tested tenant RLS and constraints",
         "Supabase login/reset/invitation client",
         "MFA-gated admin policies",
-        "server invitation delivery endpoint"
+        "server invitation delivery endpoint",
+        "explicit grants under Supabase-style defaults",
+        "MFA bootstrap and password setup",
+        "separate invitation and recovery screens",
+        "versioned session state and sandbox isolation",
+        "gated real-service integration harness"
       ],
       "remaining": [
-        "real Supabase integration",
-        "SMTP delivery/recovery tests",
-        "existing-account multi-pharmacy invitation flow",
-        "invitation delivery crash reconciliation",
-        "hosted auth abuse controls"
+        "hosted Auth/PostgREST integration",
+        "SMTP/new-user and existing-user callback verification",
+        "provider-specific crash recovery and real MFA recovery",
+        "hosted auth abuse controls and URL settings verification"
       ]
     },
     {
@@ -65,14 +74,17 @@
         "transactional tenant/subscription/owner reservation",
         "editable plan/subscription/invoice/payment forms",
         "audited payment confirmation RPC and UI",
-        "subscription transitions"
+        "subscription transitions",
+        "owner/admin invitation retry, renewal and revocation panels",
+        "recoverable delivery lease and explicit verified acceptance"
       ],
       "remaining": [
         "hosted provisioning E2E",
-        "full pharmacy details and invitation retry/revoke management",
         "billing intervals, discounts and extensions UX",
         "MRR/ARR/usage reporting",
-        "operational diagnostics"
+        "operational diagnostics",
+        "full pharmacy business details",
+        "hosted provisioning and delivery recovery acceptance"
       ]
     },
     {
@@ -235,7 +247,10 @@
         "desktop/mobile core E2E",
         "production build",
         "dependency audit",
-        "GitHub CI configuration"
+        "GitHub CI configuration",
+        "96 unit/component/policy/endpoint cases",
+        "real Node Function HTTP routing checks",
+        "explicit hosted-test safety gates"
       ],
       "remaining": [
         "hosted security and Auth/Storage/AI tests",
@@ -264,12 +279,9 @@
     }
   ],
   "validation": {
-    "unit_policy_endpoint_tests_passed": 50,
+    "unit_policy_endpoint_tests_passed": 96,
     "browser_scenarios_passed": 10,
-    "browser_viewports": [
-      "1440x1000",
-      "360x800"
-    ],
+    "browser_viewports": ["1440x1000", "360x800"],
     "production_dependency_audit": {
       "critical": 0,
       "high": 0,
@@ -279,13 +291,31 @@
     "hosted_tests_executed": false,
     "external_ai_calls_executed": false,
     "deployment_executed": false,
-    "rtl_component_suite_executed": false
+    "rtl_component_suite_executed": true,
+    "local_netlify_node_http_guards_passed": 4,
+    "real_local_supabase_stack_passed": false
   },
   "next_engineering_tasks": [
-    "Create and securely configure a Supabase development project using OWNER_MANUAL.md",
-    "Run hosted tenant/auth/invitation/storage integration scenarios",
-    "Complete clinical drafts/corrections and follow-up task lifecycle",
-    "Complete server-side pagination, analytics, localization and accessibility",
-    "Close SECURITY.md release gates before any real patient use"
-  ]
+    "Follow docs/SUPABASE_DEVELOPMENT_SETUP.md to create a separate development project/site",
+    "Securely configure development-only keys, callbacks, SMTP and TOTP",
+    "Run the safety-gated real Auth/PostgREST/Storage and deployed Netlify integration suite",
+    "Review and merge only after development integration evidence; production deployment remains separate",
+    "Continue the existing product roadmap and SECURITY.md release gates"
+  ],
+  "integration_review": {
+    "baseline": "6d63daa50151c4f64e77fcfb637eb1765f43bb81",
+    "main_matches_baseline": true,
+    "branch": "dev/supabase-integration",
+    "original_six_migrations_unchanged": true,
+    "new_migrations": [
+      "202610200007_integration_hardening.sql",
+      "202610200008_invitation_lifecycle.sql",
+      "202610200009_dispensing_replay_integrity.sql"
+    ],
+    "guide": "docs/SUPABASE_DEVELOPMENT_SETUP.md",
+    "evidence": "docs/INTEGRATION_REVIEW.md",
+    "hosted_integration_cases_executed": 0,
+    "branch_push": "blocked_upstream_https_tunnel_503",
+    "pull_request": "not_created_network_blocked"
+  }
 }
